@@ -104,6 +104,15 @@ git fetch origin
 git merge origin/main
 ```
 
+## To merge your branch into main
+
+```bash
+git switch main
+git pull origin main
+git merge backend-dev
+git push origin main
+```
+
 Resolve any merge conflicts before continuing.
 
 ## Pull Request Workflow
