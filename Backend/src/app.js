@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 cors({
-	origin: '*',
+	origin: 'http://localhost:3000',
 	methods: ['GET', 'POST', 'PUT', 'DELETE'],
 	allowedHeaders: ['Content-Type', 'Authorization'],
   });
