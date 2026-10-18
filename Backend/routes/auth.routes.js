@@ -5,6 +5,7 @@ import User from "../models/usermodel.js";
 import cookies from 'cookie-parser'
 import { setCookies, verifyUser } from "../middleware/auth.js";
 import z from 'zod'
+import { unlockLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
 
@@ -32,7 +33,7 @@ const loginSchema = z.object({
     password:z.string().min(8).max(70),
 })
 
-router.post('/login',validate(loginSchema),async(req,res)=>{
+router.post('/login',unlockLimiter,validate(loginSchema),async(req,res)=>{
     const {username,password} = req.body;
 
     const user = await User.findOne({username});
