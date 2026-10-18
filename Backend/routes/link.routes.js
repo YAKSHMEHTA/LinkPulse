@@ -5,4 +5,10 @@ import bcrypt from 'bcryptjs';
 import Link from '../models/link';
 import User from '../models/usermodel';
 import { verifyUser } from '../middleware/auth';
+import { validate } from '../middleware/validate';
+import { createLimiter } from '../middleware/rateLimit';
+
+
+const router = Router();
+router.use(verifyUser);
 
