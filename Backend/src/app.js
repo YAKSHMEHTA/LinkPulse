@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from 'cors';
 import router from "../routes/auth.routes.js";
 import cookieParser from "cookie-parser";
+import { initRedis } from "../config/redis.js";
 
 
 dotenv.config();
@@ -13,6 +14,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
+
 
 app.set('trust proxy', 1);
 
@@ -32,6 +34,7 @@ app.get("/health", (req, res) => {
 
 mongoose.connect(process.env.MONGO_DB_URI).then(() => {
 	console.log("database connected");
+	initRedis();
 	app.listen(8080, () => {
 		console.log("server listening");
 	});
