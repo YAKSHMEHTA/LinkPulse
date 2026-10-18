@@ -2,7 +2,8 @@ import { Router } from "express";
 import { validate } from "../middleware/validate.js";
 import bcrypt from 'bcryptjs';
 import User from "../models/usermodel.js";
-import { setCookies } from "../middleware/auth.js";
+import cookies from 'cookie-parser'
+import { setCookies, verifyUser } from "../middleware/auth.js";
 import z from 'zod'
 
 const router = Router();
@@ -47,7 +48,13 @@ router.post('/login',validate(loginSchema),async(req,res)=>{
     setCookies(res,user);
     return res.status(200).json({msg:'user loged in'})
 
+})
 
+
+
+router.post("/user",verifyUser,(req,res)=>{
+    console.log(req.cookies)
+    return res.json({msg:"verifyed user"});
 })
 
 export default router
