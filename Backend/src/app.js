@@ -5,6 +5,13 @@ import cors from 'cors';
 import router from "../routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import { initRedis } from "../config/redis.js";
+import authRoutes from "../routes/auth.routes.js";
+import linkRoutes from "../routes/link.routes.js";
+import campaignRoutes from "../routes/campaign.routes.js";
+import analyticsRoutes from "../routes/analytics.routes.js";
+import adminRoutes from "../routes/admin.routes.js";
+import redirectRoutes from "../routes/redirect.routes.js";
+import { errorHandler, notFound } from "../middleware/error.js";
 
 
 dotenv.config();
@@ -23,11 +30,23 @@ app.use(
 
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('trust proxy', 1);
 
 app.use('/auth',router)
 
+
+app.use('/auth', authRoutes);
+app.use('/links', linkRoutes);
+app.use('/campaigns', campaignRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/admin', adminRoutes);
+app.use('/api', notFound); 
+
+app.use(redirectRoutes); 
+
+app.use(errorHandler);
 
 
 app.get("/health", (req, res) => {

@@ -1,5 +1,5 @@
-import { getRedis } from "../config/redis";
-import Link from "../models/link";
+import { getRedis } from "../config/redis.js";
+import Link from "../models/link.js";
 
 const TTL_SECONDS = 300;
 const key = (code) => `link:${code}`;
@@ -9,7 +9,6 @@ function revive(link) {
   return link;
 }
 
-
 export async function getLinkByCode(code) {
   const redis = getRedis();
   if (redis) {
@@ -17,7 +16,6 @@ export async function getLinkByCode(code) {
       const hit = await redis.get(key(code));
       if (hit) return revive(JSON.parse(hit));
     } catch {
-   
     }
   }
 
@@ -28,12 +26,10 @@ export async function getLinkByCode(code) {
     try {
       await redis.set(key(code), JSON.stringify(link), 'EX', TTL_SECONDS);
     } catch {
-   
     }
   }
   return link;
 }
-
 
 export async function invalidateLink(code) {
   const redis = getRedis();
@@ -41,6 +37,5 @@ export async function invalidateLink(code) {
   try {
     await redis.del(key(code));
   } catch {
-  
   }
 }
