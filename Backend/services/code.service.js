@@ -1,6 +1,5 @@
 import { customAlphabet } from 'nanoid';
-import link from '../models/link';
-
+import Link from '../models/link.js';
 
 const gen = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 7);
 
@@ -21,7 +20,6 @@ export async function validateAlias(raw) {
   if (await Link.exists({ code: alias })) return { ok: false, error: 'Alias is already taken' };
   return { ok: true, alias };
 }
-
 
 export async function generateCode() {
   for (let i = 0; i < 5; i++) {

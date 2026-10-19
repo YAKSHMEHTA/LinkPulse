@@ -1,13 +1,20 @@
-import blockList from "../models/blockList";
-import dotenv from 'dotenv'
+import Blocklist from "../models/blockList.js";
+import dotenv from 'dotenv';
 
+dotenv.config();
 
 const MAX_LEN = 2048;
 const PRIVATE_HOST = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.0\.0\.0|\[::1\])/;
+const isProd = process.env.isProd === 'true' || process.env.NODE_ENV === 'production';
 
-const selfHosts = () =>
-  new Set([new URL(process.env.baseUrl).host.toLowerCase(), new URL(process.env.clientUrl).host.toLowerCase()]);
-
+const selfHosts = () => {
+  const baseUrl = process.env.baseUrl;
+  const clientUrl = process.env.clientUrl;
+  const hosts = [];
+  if (baseUrl) hosts.push(new URL(baseUrl).host.toLowerCase());
+  if (clientUrl) hosts.push(new URL(clientUrl).host.toLowerCase());
+  return new Set(hosts);
+};
 
 function domainSuffixes(host) {
   const parts = host.split('.');
@@ -39,7 +46,7 @@ export async function validateDestination(input) {
     errors.push('Destination points back to LinkPulse (redirect loop)');
   }
   if (PRIVATE_HOST.test(host)) {
-    (env.isProd ? errors : warnings).push('Destination is a local/private address');
+    (isProd ? errors : warnings).push('Destination is a local/private address');
   }
   if (url.protocol === 'http:') warnings.push('Destination is not HTTPS');
 
