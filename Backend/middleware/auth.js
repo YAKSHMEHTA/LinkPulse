@@ -5,7 +5,7 @@ import { HttpError } from './error.js';
 
 export const COOKIE = 'token';
 
-// Frontend on a different domain in production needs SameSite=None + Secure.
+
 export const cookieOptions = {
   httpOnly: true,
   secure: env.isProd,

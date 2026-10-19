@@ -11,6 +11,7 @@ import campaignRoutes from "../routes/campaign.routes.js";
 import analyticsRoutes from "../routes/analytics.routes.js";
 import adminRoutes from "../routes/admin.routes.js";
 import redirectRoutes from "../routes/redirect.routes.js";
+import { startClickFlusher } from "../services/clickBuffer.service.js";
 import { errorHandler, notFound } from "../middleware/error.js";
 
 
@@ -55,6 +56,7 @@ app.get("/health", (req, res) => {
 
 mongoose.connect(process.env.MONGO_DB_URI).then(() => {
 	console.log("database connected");
+	startClickFlusher();
 	app.listen(8080, () => {
 		const red = initRedis();
 		console.log('redis init result:', red ? 'client created' : 'disabled');
