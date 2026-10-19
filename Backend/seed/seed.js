@@ -2,18 +2,21 @@
 
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { env } from '../config/env.js';
-import { connectDB, closeDB } from '../config/db.js';
-import User from '../models/User.js';
+import mongoose from 'mongoose';
+import User from '../models/usermodel.js';
 import Campaign from '../models/Campaign.js';
-import Link from '../models/Link.js';
+import Link from '../models/link.js';
 import ClickEvent from '../models/ClickEvent.js';
-import Blocklist from '../models/Blocklist.js';
+import Blocklist from '../models/blockList.js';
 
-if (env.isProd && !process.env.ALLOW_SEED) {
+const isProd = process.env.isProd === 'true' || process.env.NODE_ENV === 'production';
+if (isProd && !process.env.ALLOW_SEED) {
   console.error('Refusing to seed in production. Set ALLOW_SEED=1 to override.');
   process.exit(1);
 }
+
+await mongoose.connect(process.env.MONGO_DB_URI || 'mongodb://127.0.0.1:27017/linkpulse');
+
 
 const DAY = 86400000;
 const rnd = (n) => Math.floor(Math.random() * n);
@@ -56,7 +59,6 @@ function makeClicks({ link, count, fromDay, toDay, pool }) {
   return docs;
 }
 
-await connectDB();
 await Promise.all([User.deleteMany({}), Campaign.deleteMany({}), Link.deleteMany({}), ClickEvent.deleteMany({}), Blocklist.deleteMany({})]);
 
 const [admin, demo] = await User.create([
@@ -121,6 +123,6 @@ console.log(`Seeded ${specs.length + 1} links, ${allClicks.length} clicks.\n`);
 console.log('Admin : admin@linkpulse.dev / Admin@123');
 console.log('User  : demo@linkpulse.dev  / Demo@12345');
 console.log('Password-protected link: /secret-deck  (password: demo123)');
-await closeDB();
+await mongoose.disconnect();
 process.exit(0);
 

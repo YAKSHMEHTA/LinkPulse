@@ -54,7 +54,7 @@ router.post('/login',unlockLimiter,validate(loginSchema),async(req,res)=>{
 
 
 router.post("/user",verifyUser,(req,res)=>{
-    console.log(req.cookies)
+    console.log('cookies',req.cookies)
     return res.json({msg:"verifyed user"});
 })
 

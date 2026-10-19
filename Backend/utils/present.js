@@ -15,7 +15,7 @@ export function presentLink(doc) {
   return {
     id: String(l._id),
     code: l.code,
-    shortUrl: `${env.baseUrl}/${l.code}`,
+    shortUrl: `${process.env.baseUrl}/${l.code}`,
     destination: l.destination,
     ownerId: String(l.ownerId),
     campaignId: l.campaignId ? String(l.campaignId) : null,

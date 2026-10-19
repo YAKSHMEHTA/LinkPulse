@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import ClickEvent from '../models/ClickEvent.js';
-import Link from '../models/Link.js';
+import Link from '../models/link.js';
 import Campaign from '../models/Campaign.js';
 
 const oid = (id) => new mongoose.Types.ObjectId(String(id));

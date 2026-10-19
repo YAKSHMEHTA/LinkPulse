@@ -1,47 +1,48 @@
-import jwt from "jsonwebtoken";
-import cookies from "cookie-parser";
-import dotenv from "dotenv";
-import user from "../models/usermodel.js";
-import cookieParser from "cookie-parser";
-import usermodel from "../models/usermodel.js";
+import jwt from 'jsonwebtoken';
+import User from '../models/usermodel.js';
+import { env } from '../config/env.js';
+import { HttpError } from './error.js';
 
-dotenv.config();
+export const COOKIE = 'token';
 
-const cookiesOption = {
-	httpOnly: true,
-	secure: process.env.isProd,
-	sameSite: process.env.isProd ? "none" : "lax",
-	path: "/",
+// Frontend on a different domain in production needs SameSite=None + Secure.
+export const cookieOptions = {
+  httpOnly: true,
+  secure: env.isProd,
+  sameSite: env.isProd ? 'none' : 'lax',
+  path: '/',
 };
 
-export const tokenGenrator = async (user) => {
-	return jwt.sign({ id: user.id, role: user.role }, process.env.access_token_secret, { expiresIn: "7d" });
-};
+export function signToken(user) {
+  return jwt.sign({ sub: String(user._id ?? user.id), role: user.role }, env.jwtSecret, { expiresIn: '7d' });
+}
 
-export const setCookies = async (res, user) => {
-	res.cookie("accessToken", tokenGenrator(user), { ...cookiesOption, maxAge: 7 * 24 * 3600 * 1000 });
-};
+export function setAuthCookie(res, user) {
+  const token = signToken(user);
+  res.cookie(COOKIE, token, { ...cookieOptions, maxAge: 7 * 24 * 3600 * 1000 });
+  res.cookie('accessToken', token, { ...cookieOptions, maxAge: 7 * 24 * 3600 * 1000 });
+}
 
-export const verifyUser = async (req, res, next) => {
+export async function requireAuth(req, res, next) {
+  const header = req.get('authorization');
+  const token = req.cookies?.[COOKIE] || req.cookies?.accessToken || (header?.startsWith('Bearer ') ? header.slice(7) : null);
+  if (!token) throw new HttpError(401, 'Authentication required');
+
+  let payload;
   try {
-    const accessToken = req.cookies?.accessToken;
-    if (!accessToken) {
-      return res.status(401).json({ msg: "user not logged in" });
-    }
-
-    const decoded = jwt.verify(accessToken, process.env.access_token_secret);
-    const user = await usermodel.findById(decoded.id);
-
-    if (!user) {
-      return res.status(401).json({ msg: "user not found" });
-    }
-
-    req.user = user;
-    next();
-  } catch (e) {
-    return res.status(401).json({
-      success: false,
-      message: "Access token expired or invalid",
-    });
+    payload = jwt.verify(token, env.jwtSecret);
+  } catch {
+    throw new HttpError(401, 'Invalid or expired token');
   }
-};
+
+  const user = await User.findById(payload.sub).lean();
+  if (!user) throw new HttpError(401, 'User no longer exists');
+
+  req.user = { id: String(user._id), role: user.role, email: user.email, name: user.name ?? user.username };
+  next();
+}
+
+export const verifyUser = requireAuth;
+export const tokenGenrator = signToken;
+export const setCookies = setAuthCookie;
+export const requireAuthLegacy = requireAuth;
