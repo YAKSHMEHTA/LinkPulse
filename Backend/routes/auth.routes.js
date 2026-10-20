@@ -48,6 +48,8 @@ router.post('/login',unlockLimiter,validate(loginSchema),async(req,res)=>{
     }
 
     setCookies(res,user);
+    console.log('logged in')
+
     return res.status(200).json({msg:'user loged in'})
 
 })
