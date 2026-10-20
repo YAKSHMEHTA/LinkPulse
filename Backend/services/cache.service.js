@@ -14,11 +14,12 @@ export async function getLinkByCode(code) {
   if (redis) {
     try {
       const hit = await redis.get(key(code));
+      console.log('hit', hit)
       if (hit) return revive(JSON.parse(hit));
     } catch {
     }
   }
-
+  
   const link = await Link.findOne({ code }).select('+passwordHash').lean();
   if (!link) return null;
 

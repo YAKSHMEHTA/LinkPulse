@@ -42,6 +42,7 @@ router.post('/login',unlockLimiter,validate(loginSchema),async(req,res)=>{
     }
     console.log(user)
     const verifyPassword = await bcrypt.compare(password,user.passwordHashed);
+    console.log('verifyPassword',verifyPassword)
     if(!verifyPassword){
         return res.status(401).json({msg:'wrong username or password'});
     }
