@@ -1,3 +1,11 @@
+FOR QUICK ACCESS 
+LOGIN WITH : USERNAME - james 
+            PASSWORD - jamesjames
+
+for Admin 
+USERNAME- admin
+PASSWORD - Admin@123
+
 # LinkPulse
 
 A URL shortener with campaigns, real-time click analytics and QR code generation.
