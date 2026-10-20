@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 function Navbar() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,9 +14,19 @@ function Navbar() {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/getuser`, {
           credentials: 'include',
         });
-        setIsAuthenticated(res.ok);
+
+        if (!res.ok) {
+          setIsAuthenticated(false);
+          setUserRole(null);
+          return;
+        }
+
+        const userData = await res.json();
+        setIsAuthenticated(true);
+        setUserRole(userData?.role || null);
       } catch {
         setIsAuthenticated(false);
+        setUserRole(null);
       } finally {
         setLoading(false);
       }
@@ -34,6 +45,7 @@ function Navbar() {
       console.error('Logout failed:', error);
     } finally {
       setIsAuthenticated(false);
+      setUserRole(null);
       navigate('/login', { replace: true });
     }
   }
@@ -54,6 +66,7 @@ function Navbar() {
             <Link to='/dashboard'>My links</Link>
             <Link to='/dashboard'>Analytics</Link>
             <Link to='/campaigns'>Campaigns</Link>
+            {userRole === 'admin' && <Link to='/admin'>Admin</Link>}
             <button type='button' onClick={logout}>Logout</button>
           </>
         )}
