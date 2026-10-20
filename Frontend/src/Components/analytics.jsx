@@ -1,6 +1,6 @@
 import "./analytics.css";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 function BarList({ items, labelKey, className = "click-bars" }) {
   if (!items || items.length === 0) {
@@ -27,7 +27,7 @@ function BarList({ items, labelKey, className = "click-bars" }) {
   );
 }
 
-function Analytics({ refreshKey }){
+function Analytics({refreshKey}){
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

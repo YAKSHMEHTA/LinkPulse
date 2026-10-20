@@ -11,6 +11,19 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState("links");
   const [status, setStatus] = useState("checking");
 
+  async function logout() {
+  try {
+    await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (error) {
+    console.error("Logout failed:", error);
+  } finally {
+    navigate("/login", { replace: true });
+  }
+}
+
   useEffect(() => {
     api("/admin/blocklist")
       .then(() => setStatus("ok"))
@@ -51,6 +64,10 @@ export default function AdminDashboard() {
             </button>
           ))}
         </nav>
+
+        <button className="logout" onClick={logout}>
+          Logout
+        </button>
       </aside>
 
       <main className="main">
