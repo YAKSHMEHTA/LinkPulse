@@ -1,0 +1,32 @@
+html{
+  scroll-behavior: smooth;
+}
+
+.dashboard-layout{
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+#dashboard{
+  margin-left: 240px;
+  padding: 32px;
+  min-width: 0;
+}
+
+#dashboard > * {
+  max-width: 100%;
+}
+
+#dashboard, #my-links,
+#analytics, #campaigns{
+  scroll-margin-top: 80px;
+}
+
+
+
+@media (max-width: 600px) {
+  #dashboard {
+    margin-left: 0;
+    padding: 80px 16px 24px;
+  }
+}

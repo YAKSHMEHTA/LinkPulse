@@ -1,46 +1,75 @@
-import {useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./auth.css";
 
-function Login(){
+function Login() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-
-  async function submitFunc(event){
+  async function submitFunc(event) {
     event.preventDefault();
+
     const data = new FormData(event.target);
 
     setError("");
     setLoading(true);
 
-    try{
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`,{
-        method: "POST",
-        credentials: "include",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username: data.get("username"), password: data.get("password"),}),
-      });
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/login`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: data.get("username"),
+            password: data.get("password"),
+          }),
+        }
+      );
 
       const result = await res.json();
 
-      if(!res.ok){
+      if (!res.ok) {
         setError(result.msg || "Login failed");
         return;
       }
 
-      navigate("/");    //dashboard ki link 
+      // Fetch the logged-in user's details and role
+      const userRes = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/getuser`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
 
-    }catch(err){
+      const userData = await userRes.json();
+
+      if (!userRes.ok) {
+        setError("Could not fetch your account details.");
+        return;
+      }
+
+      // Navigate according to the user's role
+      if (userData.role === "admin") {
+        navigate("/admin");
+      } else if (userData.role === "user") {
+        navigate("/dashboard");
+      } else {
+        setError("Could not identify your account role.");
+      }
+    } catch (err) {
       setError("Can't reach the server. Try again later.");
-    }finally{
+    } finally {
       setLoading(false);
     }
   }
 
-  return(
+  return (
     <div className="auth">
       <div className="form">
         <h1>Welcome Back!</h1>
@@ -48,19 +77,41 @@ function Login(){
 
         <form onSubmit={submitFunc}>
           <label htmlFor="username">Username</label>
-          <input type="text" id="username" name="username" placeholder="Enter username" autoComplete="username" required/>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Enter username"
+            autoComplete="username"
+            required
+          />
 
           <label htmlFor="password">Password</label>
-          <div className="pass">
-            <input type={showPass? "text": "password"} id="password" name="password" placeholder="Enter password" autoComplete="current-password" required/>
 
-            <button type="button" className="show-pass" onClick={()=> setShowPass((prev)=> !prev)}>
-              {showPass? "Hide":"Show"}
+          <div className="pass">
+            <input
+              type={showPass ? "text" : "password"}
+              id="password"
+              name="password"
+              placeholder="Enter password"
+              autoComplete="current-password"
+              required
+            />
+
+            <button
+              type="button"
+              className="show-pass"
+              onClick={() => setShowPass((prev) => !prev)}
+            >
+              {showPass ? "Hide" : "Show"}
             </button>
           </div>
 
           {error && <p className="error">{error}</p>}
-          <button type="submit" disabled={loading}>{loading? "Logging in...": "Login"}</button>
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
         </form>
 
         <p className="switch-link">
