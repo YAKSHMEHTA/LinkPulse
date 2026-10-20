@@ -1,139 +1,229 @@
 # LinkPulse
 
-URL shortener with redirect rules, click analytics, and admin controls. Built for the Tech Geeks hackathon.
+A URL shortener with campaigns, real-time click analytics and QR code generation.
 
-## Core Idea
+Paste a long URL, get a short link you can track, group into campaigns and share as a QR code.
 
-The `Link` is the central record. Campaigns organize links, while rules (expiry, click limit, password, and status) control redirects. Click events power the analytics dashboard. Disabled or expired links retain their analytics.
+## Features
 
-## Stack
+- **URL shortening**: base62 short codes, optional custom aliases and expiry
+- **Campaigns**: group links and compare results, with UTM tags added for you
+- **Analytics**: total clicks, unique visitors, daily clicks, top referrers and countries
+- **QR codes**: generated per link, with custom colors, PNG or SVG
+- **Auth**: sign up, sign in and a personal dashboard for your links
+- **Rate limiting**: Redis-backed limits per IP and per user
+- **Fast redirects**: Redis lookup on the hot path, analytics written asynchronously
+- **UI**: light/dark theme, responsive, GSAP animations
 
-- **Backend:** Node.js, Express, MongoDB, Redis
-- **Frontend:** TODO
+## Tech Stack
+
+| Layer | Tech |
+|---|---|
+| Frontend | React, Vite, React Router, GSAP |
+| Backend | Node.js, Express |
+| Cache / hot path | Redis (links, counters, rate limits) |
+| Database | PostgreSQL or MongoDB (source of truth for users, links, campaigns) |
+| Auth | JWT (httpOnly cookie), bcrypt |
+| QR codes | `qrcode` (server-side) |
+| Tooling | ESLint, Prettier, Docker Compose |
+
+> Swap the database and libraries to match what you actually use.
 
 ## Project Structure
 
-```text
+```
 linkpulse/
-├── backend/    # Backend development
-├── frontend/   # Frontend development
+├── client/                 # React app (Vite)
+│   └── src/
+│       ├── pages/          # Home, Login, Dashboard
+│       ├── components/     # Hero, LinkCard, Charts
+│       └── lib/            # api client, auth helpers
+├── server/
+│   └── src/
+│       ├── routes/         # auth, links, campaigns, redirect
+│       ├── middleware/     # auth, rateLimit, validate, errorHandler
+│       ├── services/       # linkService, analyticsService, qrService
+│       ├── config/         # redis, db, env
+│       └── index.js
+├── docker-compose.yml
 └── README.md
 ```
 
-## Branch Strategy
+## Architecture
 
-- `main`: Stable, integrated code.
-- `backend-dev`: Backend developer.
-- `frontend-yourname`: Individual frontend branches.
-
-Each developer must work on their own branch.
+See the **API Flow** diagrams section for the request flows (create link, redirect and analytics, stats, QR).
 
 ## Getting Started
 
-```bash
-git clone https://github.com/USERNAME/REPO.git
-cd REPO
-```
+### Prerequisites
 
-Replace `USERNAME/REPO` with the actual GitHub repository path.
+- Node.js 18+
+- npm (or pnpm / yarn)
+- Redis 7+ (or Docker)
+- PostgreSQL or MongoDB (or Docker)
 
-## Developer Instructions
-
-### Backend Developer
-
-Create your branch once:
+### 1. Clone
 
 ```bash
-git switch -c backend-dev
-git push -u origin backend-dev
+git clone https://github.com/<your-username>/linkpulse.git
+cd linkpulse
 ```
 
-Before starting work:
+### 2. Start Redis and the database
 
 ```bash
-git switch backend-dev
-git pull origin backend-dev
+docker compose up -d
 ```
 
-After making changes:
+Or run them locally and point the env vars at them.
+
+### 3. Configure environment
 
 ```bash
-git add backend/
-git commit -m "feat: describe backend changes"
-git push
+cp server/.env.example server/.env
+cp client/.env.example client/.env
 ```
 
-### Frontend Developers (All 3 Members)
+**server/.env**
 
-Each frontend developer must create a **separate branch**.
+| Variable | Description | Example |
+|---|---|---|
+| `PORT` | API port | `8080` |
+| `BASE_URL` | Public short-link domain | `http://localhost:8080` |
+| `CLIENT_URL` | Frontend origin (CORS) | `http://localhost:5173` |
+| `REDIS_URL` | Redis connection | `redis://localhost:6379` |
+| `DATABASE_URL` | Postgres / Mongo URI | `postgres://user:pass@localhost:5432/linkpulse` |
+| `JWT_SECRET` | Secret for signing tokens | `change-me` |
+| `JWT_EXPIRES_IN` | Token lifetime | `7d` |
+| `RATE_LIMIT_ENABLED` | Toggle rate limiting | `true` |
 
-Create your branch once:
+**client/.env**
+
+| Variable | Description | Example |
+|---|---|---|
+| `VITE_API_URL` | API base URL | `http://localhost:8080` |
+
+### 4. Install and run
 
 ```bash
-git switch main
-git pull origin main
-git switch -c frontend-yourname
-git push -u origin frontend-yourname
+# backend
+cd server
+npm install
+npm run dev
+
+# frontend (new terminal)
+cd client
+npm install
+npm run dev
 ```
 
-Replace `frontend-yourname` with your own branch name.
+- Frontend: http://localhost:5173
+- API: http://localhost:8080
 
-Before starting work:
+### Scripts
 
-```bash
-git switch frontend-yourname
-git pull origin frontend-yourname
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start with hot reload |
+| `npm run build` | Production build (client) |
+| `npm start` | Start the API (server) |
+| `npm run lint` | Lint the code |
+
+## API Reference
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/auth/register` | No | Create an account |
+| `POST` | `/auth/login` | No | Sign in, sets the auth cookie |
+| `POST` | `/auth/logout` | Yes | Clear the cookie |
+| `GET` | `/auth/getuser` | Yes | Current user |
+| `POST` | `/links` | Optional | Create a short link |
+| `GET` | `/links` | Yes | List your links |
+| `DELETE` | `/links/:code` | Yes | Delete a link |
+| `GET` | `/links/:code/stats` | Yes | Analytics for a link |
+| `GET` | `/links/:code/qr` | No | QR code (`?color=%232F5BFF&format=png\|svg`) |
+| `POST` | `/campaigns` | Yes | Create a campaign |
+| `GET` | `/campaigns/:id/stats` | Yes | Combined campaign stats |
+| `GET` | `/:code` | No | Redirect to the original URL |
+
+**Create link**
+
+```http
+POST /api/links
+Content-Type: application/json
+
+{ "url": "https://example.com/very/long/path", "alias": "spring", "campaignId": "c_123" }
 ```
 
-After making changes:
-
-```bash
-git add frontend/
-git commit -m "feat: describe frontend changes"
-git push
+```json
+{ "code": "spring", "shortUrl": "http://localhost:5000/spring", "qrUrl": "/api/links/spring/qr" }
 ```
 
-Each member should commit only their relevant changes.
+## Authentication
 
-## Sync Your Branch with Main
+- Passwords are hashed with **bcrypt** (cost 10+).
+- Login issues a signed **JWT** stored in an **httpOnly, SameSite cookie**, so it isn't readable from JavaScript.
+- The `auth` middleware verifies the token and attaches `req.user`.
+- Anonymous users can create links (with stricter rate limits). Managing links, stats and campaigns requires login.
+- Ownership is checked on every link and campaign route, so users only see their own data.
 
-To bring the latest integrated changes into your branch:
+## Rate Limiting
 
-```bash
-git fetch origin
-git merge origin/main
-```
+Redis-backed fixed window, keyed by IP for anonymous users and by user ID when logged in.
 
-## To merge your branch into main
+| Endpoint | Key | Limit |
+|---|---|---|
+| `POST /api/auth/*` | `rl:auth:{ip}` | 10 / 15 min |
+| `POST /api/links` (anon) | `rl:create:{ip}` | 10 / hour |
+| `POST /api/links` (auth) | `rl:create:{userId}` | 100 / hour |
+| `GET /:code` | `rl:redirect:{ip}` | 120 / min |
+| `GET /api/*/stats` | `rl:stats:{userId}` | 60 / min |
 
-```bash
-git switch main
-git pull origin main
-git merge backend-dev
-git push origin main
-```
+When exceeded, the API returns `429 Too Many Requests` with a `Retry-After` header.
 
-Resolve any merge conflicts before continuing.
+## Analytics
 
-## Pull Request Workflow
+Each redirect records, without blocking the response:
 
-1. Push your feature branch to GitHub.
-2. Open a Pull Request from your branch into `main`.
-3. Request a review from a teammate.
-4. Resolve conflicts and address feedback.
-5. Merge after approval.
+- total and per-day click counters
+- referrer and country leaderboards (sorted sets)
+- unique visitors (HyperLogLog on a hashed IP, so raw IPs aren't stored)
 
-Never merge unreviewed changes directly into `main`.
+Stats responses are cached in Redis for 30 seconds.
 
-## Team Rules
+## Security
 
-- Never push directly to `main`.
-- Never commit `.env` files, credentials, or secrets.
-- Coordinate changes to shared files such as `README.md` and `package.json`.
-- Pull the latest changes before starting work.
-- Use meaningful commit messages.
-- Communicate API changes between frontend and backend developers.
-- Keep frontend and backend code inside their respective folders.
+- Input validation: protocol allowlist, max URL length, blocks links to the app's own domain
+- Hashed IPs for unique-visitor counts
+- CORS limited to `CLIENT_URL`
+- `helmet` for security headers
+- Secrets only in env vars, never committed
+
+## Deployment
+
+1. Deploy the API (Render, Railway, Fly.io or a VPS) with Redis and a database attached.
+2. Set the env vars above, with `BASE_URL` as your short domain.
+3. Deploy `client/` (Vercel or Netlify) with `VITE_API_URL` pointing at the API.
+4. Enable Redis persistence (`appendonly yes`) so links survive restarts.
+
+## Roadmap
+
+- [ ] Link expiry and password-protected links
+- [ ] Device and browser breakdown
+- [ ] Custom domains
+- [ ] CSV export for analytics
+- [ ] Team workspaces
+
+## Contributing
+
+1. Fork the repo
+2. Create a branch: `git checkout -b feature/my-feature`
+3. Commit your changes and push
+4. Open a pull request
+
+
+
+
 
 ## Backend Work Flow
 ## API Flow
