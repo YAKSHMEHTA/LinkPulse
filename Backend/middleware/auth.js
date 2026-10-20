@@ -7,7 +7,7 @@ export const COOKIE = 'token';
 
 
 export const cookieOptions = {
-  httpOnly: true,
+  httpOnly: false,
   secure: env.isProd,
   sameSite: env.isProd ? 'none' : 'lax',
   path: '/',
