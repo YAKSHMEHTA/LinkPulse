@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Navbar from "./navbar";
 import CreateLink from "./createLink";
 import MyLinks from "./myLinks";
 import Analytics from "./analytics";
@@ -10,8 +9,6 @@ function Dashboard(){
 
   return(
     <div className="dashboard-layout">
-      <Navbar />
-
       <main id="dashboard">
         <section className="welcome">
           <h1>Welcome to LinkPulse</h1>
