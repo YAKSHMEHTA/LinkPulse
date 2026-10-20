@@ -178,6 +178,13 @@ router.get('/:id', validate(idParams, 'params'), async (req, res) => {
   res.json({ link: presentLink(await getAccessibleLink(req.valid.params.id, req.user)) });
 });
 
+router.delete('/:id', validate(idParams, 'params'), async (req, res) => {
+  const link = await getAccessibleLink(req.valid.params.id, req.user);
+  await Link.findByIdAndDelete(link._id);
+  await invalidateLink(link.code);
+  res.json({ ok: true, deletedId: String(link._id) });
+});
+
 router.patch('/:id', validate(idParams, 'params'), validate(updateSchema), async (req, res) => {
   const link = await getAccessibleLink(req.valid.params.id, req.user);
   const b = req.valid.body;

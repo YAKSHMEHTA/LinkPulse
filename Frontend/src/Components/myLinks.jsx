@@ -55,6 +55,33 @@ function MyLinks({refreshKey}){
     }
   }
 
+  async function deleteLink(id) {
+    const confirmed = window.confirm("Delete this short link?");
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/links/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.msg || data.error || "Could not delete link");
+        return;
+      }
+
+      setLinks((prev) => prev.filter((link) => (link._id ?? link.id) !== id));
+    } catch (err) {
+      setError("Could not delete link. Try again later.");
+    }
+  }
+
+  function openQrCode(id) {
+    const url = `${import.meta.env.VITE_API_URL}/links/${id}/qr?format=png&size=300`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   const query = search.toLowerCase();
   const filteredLinks = links.filter(
     (link) =>
@@ -108,6 +135,14 @@ function MyLinks({refreshKey}){
             >
               {link.effectiveStatus}
             </span>
+            <div className="links-actions">
+              <button type="button" className="links-button links-button-qr" onClick={() => openQrCode(link._id ?? link.id)}>
+                QR
+              </button>
+              <button type="button" className="links-button links-button-delete" onClick={() => deleteLink(link._id ?? link.id)}>
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       ))}
