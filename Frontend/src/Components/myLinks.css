@@ -91,6 +91,32 @@
   flex-shrink: 0;
 }
 
+.links-actions{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.links-button{
+  padding: 7px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.links-button-qr{
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.links-button-delete{
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .links-status{
   padding: 6px 10px;
   border-radius: 20px;

@@ -135,6 +135,93 @@ Never merge unreviewed changes directly into `main`.
 - Communicate API changes between frontend and backend developers.
 - Keep frontend and backend code inside their respective folders.
 
+## Backend Work Flow
+## API Flow
+
+### Architecture
+
+```mermaid
+flowchart LR
+    C[Client] --> RL{Rate Limiter}
+    RL -- over limit --> E429[429 Too Many Requests]
+    RL -- ok --> V[Validation]
+    V --> H[Express Handlers]
+    H <--> R[(Redis)]
+    H -. async sync .-> DB[(Postgres / Mongo)]
+```
+
+### Create Short Link: `POST /links`
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant R as Redis
+
+    C->>A: POST /links {url, campaignId?, alias?}
+    A->>R: INCR rl:create:{ip}
+    alt limit exceeded
+        A-->>C: 429 + Retry-After
+    else allowed
+        A->>A: Validate URL
+        A->>R: INCR link:id (or SETNX alias)
+        A->>A: Encode base62 → code
+        A->>R: HSET link:{code} url, campaignId, userId
+        A->>R: SADD campaign:{id}:links code
+        A-->>C: 201 {shortUrl, code, qrUrl}
+    end
+```
+
+### Redirect + Analytics: `GET /:code`
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant R as Redis
+
+    C->>A: GET /:code
+    A->>R: INCR rl:redirect:{ip}
+    alt limit exceeded
+        A-->>C: 429
+    else allowed
+        A->>R: HGET link:{code} url
+        alt not found
+            A-->>C: 404
+        else found
+            A-)R: INCR clicks:{code} (async)
+            A-)R: INCR clicks:{code}:{date}
+            A-)R: ZINCRBY ref:{code} / geo:{code}
+            A-)R: PFADD uniq:{code} ipHash
+            A-->>C: 302 Location: original URL
+        end
+    end
+```
+
+### Stats: `GET /links/:code/stats`
+
+```mermaid
+flowchart TD
+    A[Request] --> B{Cached? stats:code}
+    B -- hit --> Z[Return JSON]
+    B -- miss --> C[Pipeline reads from Redis]
+    C --> D[Total clicks, uniques, daily series, top referrers, top countries]
+    D --> E[SETEX stats:code 30s]
+    E --> Z
+```
+
+### QR Code: `GET /links/:code/qr`
+
+```mermaid
+flowchart LR
+    A[Request color, format] --> B{Cached? qr:code:color:format}
+    B -- hit --> Z[Return image]
+    B -- miss --> C[Generate QR for domain/code]
+    C --> D[Cache in Redis]
+    D --> Z
+    Z -. scan .-> E[GET /:code → counted as click]
+```
+
 ## Setup Instructions
 
 Backend and frontend installation and environment setup instructions will be added once the project scaffolds are ready.

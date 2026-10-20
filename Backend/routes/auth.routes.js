@@ -54,11 +54,12 @@ router.post("/login", unlockLimiter, validate(loginSchema), async (req, res) => 
 });
 
 router.post("/logout", (req, res) => {
+	const isProd = process.env.isProd === 'true' || process.env.NODE_ENV === 'production' || process.env.RENDER === 'true' || process.env.VERCEL === '1';
 	const cookieOptions = {
 		path: "/",
 		httpOnly: false,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+		secure: isProd,
+		sameSite: isProd ? "none" : "lax",
 	};
 
 	res.clearCookie("token", cookieOptions);
