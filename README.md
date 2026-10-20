@@ -13,7 +13,7 @@ Paste a long URL, get a short link you can track, group into campaigns and share
 - **Auth**: sign up, sign in and a personal dashboard for your links
 - **Rate limiting**: Redis-backed limits per IP and per user
 - **Fast redirects**: Redis lookup on the hot path, analytics written asynchronously
-- **UI**: light/dark theme, responsive, GSAP animations
+- **UI**: light theme, responsive, 
 
 ## Tech Stack
 
@@ -22,10 +22,10 @@ Paste a long URL, get a short link you can track, group into campaigns and share
 | Frontend | React, Vite, React Router, GSAP |
 | Backend | Node.js, Express |
 | Cache / hot path | Redis (links, counters, rate limits) |
-| Database | PostgreSQL or MongoDB (source of truth for users, links, campaigns) |
+| Database |   MongoDB (source of truth for users, links, campaigns) |
 | Auth | JWT (httpOnly cookie), bcrypt |
 | QR codes | `qrcode` (server-side) |
-| Tooling | ESLint, Prettier, Docker Compose |
+| Tooling | ESLint, Prettier |
 
 > Swap the database and libraries to match what you actually use.
 
@@ -35,7 +35,6 @@ Paste a long URL, get a short link you can track, group into campaigns and share
 linkpulse/
 ├── client/                 # React app (Vite)
 │   └── src/
-│       ├── pages/          # Home, Login, Dashboard
 │       ├── components/     # Hero, LinkCard, Charts
 │       └── lib/            # api client, auth helpers
 ├── server/
