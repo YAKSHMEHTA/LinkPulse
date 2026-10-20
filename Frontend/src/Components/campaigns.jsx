@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Campaigns.css";
+import "./campaigns.css";
 
 const API = (import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/$/, "");
 const number = (value) => new Intl.NumberFormat().format(Number(value || 0));
