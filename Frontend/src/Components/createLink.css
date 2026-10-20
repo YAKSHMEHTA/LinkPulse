@@ -20,15 +20,22 @@
 .create-link .create-row{
   display:flex;
   gap:12px;
+  align-items:center;
 }
 
-.create-link input{
+.create-link input,
+.create-link .campaign-select{
   flex:1;
   min-width:0;
   padding:14px;
   border:1px solid #cbd5e1;
   border-radius:8px;
   font-size:15px;
+  background:#fff;
+}
+
+.create-link .campaign-select{
+  max-width:220px;
 }
 
 .create-link button{

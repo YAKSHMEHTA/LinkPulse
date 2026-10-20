@@ -50,5 +50,17 @@ router.get('/:id/stats', validate(idParams, 'params'), validate(statsQuery, 'que
   res.json({ campaign, ...stats });
 });
 
+router.delete('/:id', validate(idParams, 'params'), async (req, res) => {
+  const campaign = await Campaign.findById(req.valid.params.id);
+  if (!campaign || (req.user.role !== 'admin' && String(campaign.ownerId) !== req.user.id)) {
+    throw new HttpError(404, 'Campaign not found');
+  }
+
+  await Link.updateMany({ campaignId: campaign._id }, { $set: { campaignId: null } });
+  await Campaign.findByIdAndDelete(campaign._id);
+
+  res.json({ ok: true, deletedId: String(campaign._id) });
+});
+
 export default router;
 

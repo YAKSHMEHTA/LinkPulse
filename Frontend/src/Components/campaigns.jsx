@@ -33,12 +33,15 @@ export default function Campaigns() {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [selectedId, setSelectedId] = useState("");
+  const [selectedLinks, setSelectedLinks] = useState([]);
   const [stats, setStats] = useState(null);
   const [days, setDays] = useState(7);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [newLinkUrl, setNewLinkUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [linkSaving, setLinkSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -67,13 +70,21 @@ export default function Campaigns() {
   useEffect(() => {
     if (!selectedId) {
       setStats(null);
+      setSelectedLinks([]);
       return;
     }
+
     let cancelled = false;
     setError("");
+
     api(`/campaigns/${selectedId}/stats?days=${days}`)
       .then((result) => { if (!cancelled) setStats(result); })
       .catch((err) => { if (!cancelled) setError(err.message); });
+
+    api(`/links?campaignId=${selectedId}&page=1&limit=50`)
+      .then((result) => { if (!cancelled) setSelectedLinks(result.items || []); })
+      .catch(() => { if (!cancelled) setSelectedLinks([]); });
+
     return () => { cancelled = true; };
   }, [selectedId, days]);
 
@@ -96,6 +107,70 @@ export default function Campaigns() {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function createLinkInCampaign(event) {
+    event.preventDefault();
+    if (!selectedId) {
+      setError("Select a campaign first.");
+      return;
+    }
+
+    const value = newLinkUrl.trim();
+    if (!value) {
+      setError("Enter a URL to create a short link.");
+      return;
+    }
+
+    setLinkSaving(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const url = new URL(value);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        throw new Error("URL must start with http:// or https://");
+      }
+
+      const result = await api("/links", {
+        method: "POST",
+        body: JSON.stringify({ destination: url.href, campaignId: selectedId }),
+      });
+
+      setNewLinkUrl("");
+      setNotice(`Short link created: ${result.link?.shortUrl || "success"}`);
+      await loadCampaigns(selectedId);
+      if (stats) {
+        const refreshed = await api(`/campaigns/${selectedId}/stats?days=${days}`);
+        setStats(refreshed);
+      }
+    } catch (err) {
+      setError(err.message || "Could not create short link in this campaign.");
+    } finally {
+      setLinkSaving(false);
+    }
+  }
+
+  async function deleteCampaign() {
+    if (!selectedId) return;
+    const confirmed = window.confirm("Delete this campaign and remove it from its links?");
+    if (!confirmed) return;
+
+    setError("");
+    setNotice("");
+
+    try {
+      const result = await api(`/campaigns/${selectedId}`, { method: "DELETE" });
+      if (result.ok) {
+        setSelectedId("");
+        setSelectedLinks([]);
+        setStats(null);
+        setNotice("Campaign deleted successfully.");
+        await loadCampaigns();
+      }
+    } catch (err) {
+      setError(err.message || "Could not delete campaign.");
     }
   }
 
@@ -125,6 +200,9 @@ export default function Campaigns() {
         </div>
         <div className="campaign-header-actions">
           <button className="campaign-button campaign-button-light" type="button" onClick={() => navigate("/")}>Home</button>
+          {selected && (
+            <button className="campaign-button campaign-button-light" type="button" onClick={deleteCampaign}>Delete campaign</button>
+          )}
           <button className="campaign-button campaign-button-light" type="button" onClick={logout}>Log out</button>
         </div>
       </header>
@@ -159,6 +237,59 @@ export default function Campaigns() {
           )}
         </section>
       </div>
+
+      {selected && (
+        <>
+          <section className="campaign-panel campaign-create-link-panel">
+            <div className="campaign-panel-heading">
+              <div>
+                <h2>Create link in {selected.name}</h2>
+                <p>Shorten a new URL and assign it to the selected campaign.</p>
+              </div>
+            </div>
+            <form onSubmit={createLinkInCampaign} className="campaign-inline-form">
+              <input
+                type="url"
+                value={newLinkUrl}
+                onChange={(event) => setNewLinkUrl(event.target.value)}
+                placeholder="https://example.com"
+                required
+              />
+              <button className="campaign-button campaign-button-primary" type="submit" disabled={linkSaving}>
+                {linkSaving ? "Creating…" : "Create link"}
+              </button>
+            </form>
+          </section>
+
+          <section className="campaign-panel campaign-links-panel">
+            <div className="campaign-panel-heading">
+              <div>
+                <h2>Links in {selected.name}</h2>
+                <p>{selectedLinks.length} link{selectedLinks.length === 1 ? "" : "s"} in this campaign.</p>
+              </div>
+            </div>
+
+            {selectedLinks.length === 0 ? (
+              <div className="campaign-empty"><strong>No links yet</strong><p>Create a short link above to add one to this campaign.</p></div>
+            ) : (
+              <div className="campaign-links-list">
+                {selectedLinks.map((link) => (
+                  <div key={link.id || link._id} className="campaign-link-item">
+                    <div className="campaign-link-main">
+                      <strong>{link.destination}</strong>
+                      <a href={link.shortUrl} target="_blank" rel="noreferrer">{link.shortUrl}</a>
+                    </div>
+                    <div className="campaign-link-meta">
+                      <span>{link.clickCount ?? 0} clicks</span>
+                      <span className={link.effectiveStatus === "active" ? "campaign-link-status campaign-link-status-active" : "campaign-link-status campaign-link-status-inactive"}>{link.effectiveStatus}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      )}
 
       <section className="campaign-panel campaign-analytics-panel">
         <div className="campaign-panel-heading campaign-analytics-heading">
