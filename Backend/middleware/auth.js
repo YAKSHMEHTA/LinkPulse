@@ -5,11 +5,12 @@ import { HttpError } from './error.js';
 
 export const COOKIE = 'token';
 
+const isProd = Boolean(env.isProd);
 
 export const cookieOptions = {
-  httpOnly: env.isProd,
-  secure: env.isProd,
-  sameSite: env.isProd ? 'none' : 'lax',
+  httpOnly: false,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
   path: '/',
 };
 
@@ -19,9 +20,10 @@ export function signToken(user) {
 
 export function setAuthCookie(res, user) {
   const token = signToken(user);
-  console.log('setting cookie', env.isProd)
-  res.cookie(COOKIE, token, { ...cookieOptions, maxAge: 7 * 24 * 3600 * 1000 });
-  res.cookie('accessToken', token, { ...cookieOptions, maxAge: 7 * 24 * 3600 * 1000 });
+  const cookieConfig = { ...cookieOptions, maxAge: 7 * 24 * 3600 * 1000 };
+  console.log('setting cookie', { isProd, secure: cookieConfig.secure, sameSite: cookieConfig.sameSite, httpOnly: cookieConfig.httpOnly });
+  res.cookie(COOKIE, token, cookieConfig);
+  res.cookie('accessToken', token, cookieConfig);
 }
 
 export async function requireAuth(req, res, next) {

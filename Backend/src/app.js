@@ -5,7 +5,6 @@ import cors from 'cors';
 import router from "../routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import { initRedis } from "../config/redis.js";
-import authRoutes from "../routes/auth.routes.js";
 import linkRoutes from "../routes/link.routes.js";
 import campaignRoutes from "../routes/campaign.routes.js";
 import analyticsRoutes from "../routes/analytics.routes.js";
@@ -19,26 +18,32 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = [
+  'https://rawform-psi.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
 
-const allowdOrigin = ["https://rawform-psi.vercel.app","http://localhost:5173"];
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
 
-app.use(
-  cors({
-    origin: allowdOrigin,
-    credentials: true,
-  }),
-);
-
+    callback(new Error('Origin not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set('trust proxy', 1);
 
-app.use('/auth',router)
-
-
-app.use('/auth', authRoutes);
+app.use('/auth', router);
 app.use('/links', linkRoutes);
 app.use('/campaigns', campaignRoutes);
 app.use('/analytics', analyticsRoutes);
