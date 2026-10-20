@@ -52,7 +52,7 @@ export default function Home() {
   return (
     <div className="home">
       <header className="nav">
-        <span className="logo">LinkPulse.</span>
+        <span className="logo">LinkPulse</span>
         <nav className="nav-links">
           <a href="#features">Features</a>
           {loggedIn ? (

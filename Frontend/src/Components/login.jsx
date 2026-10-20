@@ -30,8 +30,11 @@ function Login(){
         setError(result.msg || "Login failed");
         return;
       }
-
-      navigate("/");    //dashboard ki link 
+      const checkuser = await fetch(`${import.meta.env.VITE_API_URL}/admin/blocklist`, {
+        credentials: "include",
+      });
+      navigate(checkuser.ok ? "/admin" : "/");
+      //navigate("/admin");    //dashboard ki link 
 
     }catch(err){
       setError("Can't reach the server. Try again later.");
