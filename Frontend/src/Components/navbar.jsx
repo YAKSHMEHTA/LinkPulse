@@ -1,15 +1,21 @@
 import'./navbar.css';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, Link} from 'react-router-dom';
 
 function Navbar(){
 
   const navigate = useNavigate();
 
-  function logout(){
-    document.cookie = "token=; Max-Age=0; path=/; domain=linkpulse-1-e09g.onrender.com";
-    document.cookie = "accessToken=; Max-Age=0; path=/; domain=linkpulse-1-e09g.onrender.com";
-
-    navigate('/login');
+  async function logout() {
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    }catch(error){
+      console.error("Logout failed:", error);
+    }finally{
+      navigate("/login", { replace: true });
+    }
   }
 
   return(
@@ -21,7 +27,7 @@ function Navbar(){
 				<a href="#dashboard">Dashboard</a>
 				<a href="#my-links">My links</a>
 				<a href="#analytics">Analytics</a>
-				<a href="#campaigns">Campaigns</a>
+				<Link to="/campaigns">Campaigns</Link>
         <button onClick={logout}>Logout</button>
 			</div>
 

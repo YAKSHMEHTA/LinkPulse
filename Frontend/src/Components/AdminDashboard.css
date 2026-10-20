@@ -22,11 +22,12 @@
   border-right: 1px solid #e2e0ee;
 }
 
-.logo {
+.dashboard .side .logo{
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
   padding: 0 8px;
+  color: rgb(4, 57, 109);
 }
 
 .side nav {
@@ -318,6 +319,7 @@
   text-align: left;
 }
 
+
 .logout {
   margin-top: auto;
   padding: 10px 12px;
@@ -328,12 +330,14 @@
   font: inherit;
   cursor: pointer;
   text-align: left;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .logout:hover {
   color: #1d1b2e;
   background: #f6f5fa;
 }
+
 
 @media (max-width: 760px) {
   .dashboard {
