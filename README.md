@@ -310,7 +310,3 @@ flowchart LR
     D --> Z
     Z -. scan .-> E[GET /:code → counted as click]
 ```
-
-## Setup Instructions
-
-Backend and frontend installation and environment setup instructions will be added once the project scaffolds are ready.
