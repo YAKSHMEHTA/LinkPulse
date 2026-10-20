@@ -77,9 +77,31 @@ function MyLinks({refreshKey}){
     }
   }
 
-  function openQrCode(id) {
-    const url = `${import.meta.env.VITE_API_URL}/links/${id}/qr?format=png&size=300`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  async function openQrCode(id) {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/links/${id}/qr?format=png&size=300`, {
+        credentials: "include",
+      });
+
+      if (res.status === 401) {
+        navigate("/login");
+        return;
+      }
+
+      if (!res.ok) {
+        setError("Could not load QR code");
+        return;
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const newWindow = window.open(blobUrl, "_blank", "noopener,noreferrer");
+      if (!newWindow) {
+        setError("Your browser blocked the QR window. Please allow popups and try again.");
+      }
+    } catch (err) {
+      setError("Could not load QR code. Try again later.");
+    }
   }
 
   const query = search.toLowerCase();
