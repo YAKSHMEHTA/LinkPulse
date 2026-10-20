@@ -7,7 +7,7 @@ export const COOKIE = 'token';
 
 
 export const cookieOptions = {
-  httpOnly: false,
+  httpOnly: env.isProd,
   secure: env.isProd,
   sameSite: env.isProd ? 'none' : 'lax',
   path: '/',
@@ -19,6 +19,7 @@ export function signToken(user) {
 
 export function setAuthCookie(res, user) {
   const token = signToken(user);
+  console.log('setting cookie', env.isProd)
   res.cookie(COOKIE, token, { ...cookieOptions, maxAge: 7 * 24 * 3600 * 1000 });
   res.cookie('accessToken', token, { ...cookieOptions, maxAge: 7 * 24 * 3600 * 1000 });
 }
