@@ -53,9 +53,11 @@ router.post('/login',unlockLimiter,validate(loginSchema),async(req,res)=>{
 
 
 
-router.post("/user",verifyUser,(req,res)=>{
+router.get("/getuser",verifyUser,(req,res)=>{
     console.log('cookies',req.cookies)
-    return res.json({msg:"verifyed user"});
+    console.log('user',req.user);
+    const user = req.user;
+    return res.json({username:user.name,email:user.email,role:user.role});
 })
 
 export default router
